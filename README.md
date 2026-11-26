@@ -8,8 +8,8 @@ Dashboard & analytics · Crop batches (plot/crop cycle) · Maintenance tasks · 
 ## Roles (demo PINs)
 | Role | PIN | Access |
 |---|---|---|
-| Garden Manager (Ms. Maricel Evangelista) | `1234` | Add / edit / delete everything |
-| Barangay Ulango Official | `0000` | View + reports only |
+| Garden Manager (Ms. Maricel Evangelista) | `ecogarden` | Add / edit / delete everything |
+| Barangay Ulango Official | `ulango` | View + reports only |
 
 PINs are in `index.html` (`const PINS`). This is a front-end demo, not real security.
 
