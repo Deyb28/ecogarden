@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eco Garden Ulango – Operations & Crop Monitoring</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#16261c;--leaf:#1f5d3b;--lime:#a6d13f;--soil:#5b4332;--bg:#eef3ec;--card:#fff;--line:#d3dcd0;--bad:#b83a2b;--warn:#c98a10;--ok:#2d8a4e;--mut:#5d6f62}
+@media(prefers-color-scheme:dark){:root{--ink:#e6efe6;--leaf:#7cc48f;--lime:#a6d13f;--bg:#101a14;--card:#18261e;--line:#2c4034;--mut:#9db3a3;--soil:#c9a98f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Bricolage Grotesque",system-ui,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+header{background:var(--leaf);color:#fff;padding:.9rem 1.2rem;display:flex;flex-wrap:wrap;gap:.6rem 1.2rem;align-items:center;justify-content:space-between}
+@media(prefers-color-scheme:dark){header{background:#12361f}}
+header h1{margin:0;font-size:1.25rem;font-weight:800}
+header small{display:block;opacity:.8;font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:.3rem;padding:.6rem 1.2rem;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav button{border:0;background:none;padding:.45rem .8rem;border-radius:.5rem;cursor:pointer}
+nav button.on{background:var(--lime);color:#16261c;font-weight:600}
+main{max-width:1100px;margin:0 auto;padding:1.2rem}
+h2{margin:.2rem 0 1rem;font-size:1.5rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.8rem;margin-bottom:1.2rem}
+.stat{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--lime);padding:.8rem 1rem;border-radius:.4rem}
+.stat b{display:block;font-size:2rem;line-height:1.1}
+.stat span{color:var(--mut);font-size:.9rem}
+.stat.bad{border-left-color:var(--bad)}.stat.warn{border-left-color:var(--warn)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:.4rem;padding:1rem;margin-bottom:1.2rem}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.2rem}
+.tools{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:space-between;margin-bottom:.8rem}
+.btn{background:var(--leaf);color:#fff;border:0;border-radius:.4rem;padding:.5rem .9rem;cursor:pointer;font-weight:600}
+.btn.alt{background:none;color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:.2rem .55rem;font-size:.85rem}
+.btn.del{background:none;color:var(--bad);border:1px solid var(--bad)}
+:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mut);font-weight:600;white-space:nowrap}
+.tag{display:inline-block;padding:.05rem .55rem;border-radius:1rem;font-size:.82rem;background:var(--line)}
+.tag.bad{background:var(--bad);color:#fff}.tag.warn{background:var(--warn);color:#fff}.tag.ok{background:var(--ok);color:#fff}
+.bars div{display:grid;grid-template-columns:110px 1fr 70px;gap:.5rem;align-items:center;margin:.35rem 0;font-size:.9rem}
+.bars i{display:block;height:18px;background:var(--lime);border-radius:3px}
+.empty{color:var(--mut);padding:1rem 0}
+dialog{border:1px solid var(--line);border-radius:.6rem;background:var(--card);color:var(--ink);width:min(480px,94vw);padding:1.2rem}
+dialog::backdrop{background:#0008}
+label{display:block;margin:.6rem 0 .15rem;font-size:.9rem;color:var(--mut)}
+input,select,textarea{width:100%;padding:.5rem;border:1px solid var(--line);border-radius:.4rem;background:var(--bg)}
+.login{max-width:380px;margin:12vh auto;padding:1.4rem}
+.login h1{margin:0 0 .3rem}
+.err{color:var(--bad);min-height:1.4em}
+.hide{display:none!important}
+.print-only{display:none}
+@media print{header,nav,.tools,.noprint{display:none!important}.print-only{display:block}body{background:#fff;color:#000}.panel,.stat{border:1px solid #999}}
+</style>
+</head>
+<body>
+<div id="login" class="panel login hide">
+  <h1>🌱 Eco Garden</h1>
+  <p style="color:var(--mut);margin-top:0">Barangay Ulango – Operations & Crop Growth Monitoring</p>
+  <label for="role">Sign in as</label>
+  <select id="role"><option value="manager">Garden Manager (Ms. Maricel Evangelista)</option><option value="official">Barangay Ulango Official</option></select>
+  <label for="pin">PIN</label>
+  <input id="pin" type="password" inputmode="numeric" autocomplete="off">
+  <p class="err" id="err"></p>
+  <button class="btn" id="go" style="width:100%">Sign in</button>
+</div>
+
+<div id="app" class="hide">
+  <header>
+    <h1>Eco Garden of Barangay Ulango<small>Operations & Crop Growth Monitoring</small></h1>
+    <div><span id="who"></span> <button class="btn alt sm" id="out" style="color:#fff;border-color:#fff8">Sign out</button></div>
+  </header>
+  <nav id="nav"></nav>
+  <main id="view"></main>
+</div>
+
+<dialog id="dlg"><form method="dialog" id="frm"></form></dialog>
+
+<script>
+const KEY='eco-garden-ulango-v1';
+const PINS={manager:'1234',official:'0000'};   // demo only – see README
+const STAGES=['Seedling','Vegetative','Flowering','Fruiting','Ready to harvest','Harvested'];
+const TASKS=['Watering','Fertilizing','Weeding','Pruning','Pest control'];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const today=()=>iso(new Date());
+const add=n=>{const d=new Date();d.setDate(d.getDate()+n);return iso(d)};
+const uid=()=>Math.random().toString(36).slice(2,9);
+const num=v=>Number(v)||0;
+
+function seed(){
+  const b=[
+    {id:'b1',crop:'Pechay',bed:'Bed A1',qty:200,planted:add(-18),harvestBy:add(7),stage:'Vegetative'},
+    {id:'b2',crop:'Tomato',bed:'Bed B2',qty:80,planted:add(-45),harvestBy:add(25),stage:'Flowering'},
+    {id:'b3',crop:'Eggplant',bed:'Bed B3',qty:60,planted:add(-60),harvestBy:add(4),stage:'Fruiting'},
+    {id:'b4',crop:'Kangkong',bed:'Bed C1',qty:300,planted:add(-30),harvestBy:add(-2),stage:'Ready to harvest'}];
+  return {batches:b,
+    tasks:[{id:uid(),type:'Watering',batchId:'b1',due:today(),done:false},{id:uid(),type:'Fertilizing',batchId:'b2',due:add(-1),done:false},{id:uid(),type:'Weeding',batchId:'b3',due:add(2),done:false},{id:uid(),type:'Pest control',batchId:'b2',due:add(-5),done:true}],
+    issues:[{id:uid(),batchId:'b2',date:add(-6),issue:'Aphids',symptoms:'Curled leaves, sticky residue',action:'Sprayed soap solution; re-check in 3 days'}],
+    supplies:[{id:uid(),item:'Organic fertilizer',kind:'Received',qty:50,unit:'kg',date:add(-40),batchId:'',source:'Barangay Ulango'},{id:uid(),item:'Organic fertilizer',kind:'Used',qty:42,unit:'kg',date:add(-10),batchId:'b2',source:''},{id:uid(),item:'Pechay seeds',kind:'Received',qty:500,unit:'g',date:add(-20),batchId:'',source:'Barangay Ulango'}],
+    harvests:[{id:uid(),batchId:'b4',date:add(-1),qty:35,status:'Distributed',notes:'Shared with barangay households'},{id:uid(),batchId:'b3',date:add(-3),qty:12,status:'In storage',notes:''}]};
+}
+let S=null;try{S=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+S=S||seed();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+let role=null;try{role=sessionStorage.getItem('role')}catch(e){}
+let page='dashboard';
+const canEdit=()=>role==='manager';
+const bname=id=>{const b=S.batches.find(x=>x.id===id);return b?`${b.crop} (${b.bed})`:'—'};
+const batchOpts=()=>S.batches.map(b=>[b.id,`${b.crop} – ${b.bed}`]);
+const daysTo=d=>Math.round((new Date(d)-new Date(today()))/864e5);
+
+/* ---------- module config ---------- */
+const M={
+ batches:{label:'Crop batches',key:'batches',heads:['Crop','Bed / plot','Qty','Planted','Expected harvest','Stage'],
+  fields:[['crop','Crop variety','text'],['bed','Planting bed / plot','text'],['qty','Quantity planted','number'],['planted','Planting date','date'],['harvestBy','Expected harvest date','date'],['stage','Growth stage','select',STAGES.map(s=>[s,s])]],
+  row:b=>[b.crop,b.bed,b.qty,b.planted,b.harvestBy+dueTag(b.harvestBy,b.stage==='Harvested'),`<span class="tag">${esc(b.stage)}</span>`]},
+ tasks:{label:'Maintenance tasks',key:'tasks',heads:['Task','Batch','Due','Status'],
+  fields:[['type','Task','select',TASKS.map(s=>[s,s])],['batchId','Batch','select',batchOpts],['due','Due date','date']],
+  row:t=>[t.type,esc(bname(t.batchId)),t.due+dueTag(t.due,t.done),t.done?'<span class="tag ok">Done</span>':'Pending'],
+  extra:t=>canEdit()?`<button class="btn sm alt" data-done="${t.id}">${t.done?'Undo':'Mark done'}</button>`:''},
+ issues:{label:'Pests & plant health',key:'issues',heads:['Date','Batch','Issue','Symptoms','Action taken'],
+  fields:[['batchId','Batch','select',batchOpts],['date','Date noticed','date'],['issue','Pest / disease / condition','text'],['symptoms','Symptoms','textarea'],['action','Corrective action','textarea']],
+  row:i=>[i.date,esc(bname(i.batchId)),i.issue,i.symptoms,i.action]},
+ supplies:{label:'Supplies & inputs',key:'supplies',heads:['Date','Item','Type','Qty','Batch / source'],
+  fields:[['item','Item (seeds, fertilizer, soil, tool…)','text'],['kind','Entry type','select',[['Received','Received'],['Used','Used']]],['qty','Quantity','number'],['unit','Unit (kg, g, pcs…)','text'],['date','Date','date'],['batchId','Batch used on (if “Used”)','select',()=>[['','— none —'],...batchOpts()]],['source','Source (if “Received”)','text']],
+  row:s=>[s.date,s.item,s.kind==='Used'?'<span class="tag warn">Used</span>':'<span class="tag ok">Received</span>',`${s.qty} ${esc(s.unit)}`,s.kind==='Used'?esc(bname(s.batchId)):s.source]},
+ harvests:{label:'Harvests',key:'harvests',heads:['Date','Batch','Qty (kg)','Status','Notes'],
+  fields:[['batchId','Batch','select',batchOpts],['date','Harvest date','date'],['qty','Quantity (kg)','number'],['status','Distribution status','select',[['In storage','In storage'],['Distributed','Distributed']]],['notes','Notes','textarea']],
+  row:h=>[h.date,esc(bname(h.batchId)),h.qty,h.status,h.notes]}
+};
+function dueTag(d,done){if(done)return'';const n=daysTo(d);return n<0?` <span class="tag bad">${-n}d overdue</span>`:n===0?' <span class="tag warn">today</span>':n<=7?` <span class="tag warn">in ${n}d</span>`:''}
+const cell=(v,raw)=>raw?v:esc(v);
+
+/* ---------- views ---------- */
+function stock(){const m={};S.supplies.forEach(s=>{const k=s.item+'|'+s.unit;m[k]=(m[k]||0)+(s.kind==='Used'?-1:1)*num(s.qty)});return Object.entries(m).map(([k,v])=>{const[i,u]=k.split('|');return{item:i,unit:u,left:v}})}
+function dashboard(){
+  const act=S.batches.filter(b=>b.stage!=='Harvested');
+  const pend=S.tasks.filter(t=>!t.done).sort((a,b)=>a.due.localeCompare(b.due));
+  const overdue=pend.filter(t=>t.due<today()).length, dueToday=pend.filter(t=>t.due===today()).length;
+  const near=act.filter(b=>daysTo(b.harvestBy)<=7);
+  const total=S.harvests.reduce((a,h)=>a+num(h.qty),0);
+  const byCrop={};S.harvests.forEach(h=>{const c=(S.batches.find(b=>b.id===h.batchId)||{}).crop||'Other';byCrop[c]=(byCrop[c]||0)+num(h.qty)});
+  const max=Math.max(1,...Object.values(byCrop));
+  const low=stock().filter(s=>s.left<=0);
+  return `<h2>Dashboard</h2><div class="grid">
+   <div class="stat"><b>${act.length}</b><span>Active crop batches</span></div>
+   <div class="stat ${overdue?'bad':''}"><b>${overdue}</b><span>Overdue tasks</span></div>
+   <div class="stat ${dueToday?'warn':''}"><b>${dueToday}</b><span>Tasks due today</span></div>
+   <div class="stat warn"><b>${near.length}</b><span>Nearing harvest (7 days)</span></div>
+   <div class="stat"><b>${total} kg</b><span>Total harvested</span></div>
+   <div class="stat ${low.length?'bad':''}"><b>${low.length}</b><span>Supplies out of stock</span></div></div>
+  <div class="two"><div class="panel"><h3 style="margin-top:0">Upcoming & overdue tasks</h3>${pend.length?`<div class="tw"><table><tbody>${pend.slice(0,6).map(t=>`<tr><td>${esc(t.type)}</td><td>${esc(bname(t.batchId))}</td><td>${t.due}${dueTag(t.due)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="empty">No pending tasks.</p>'}</div>
+  <div class="panel"><h3 style="margin-top:0">Yield by crop</h3><div class="bars">${Object.keys(byCrop).length?Object.entries(byCrop).map(([c,v])=>`<div><span>${esc(c)}</span><i style="width:${v/max*100}%"></i><b>${v} kg</b></div>`).join(''):'<p class="empty">No harvests logged yet.</p>'}</div></div></div>
+  <div class="panel"><h3 style="margin-top:0">Crops nearing harvest</h3>${near.length?near.map(b=>`<p style="margin:.3rem 0">${esc(b.crop)} (${esc(b.bed)}) – ${b.harvestBy}${dueTag(b.harvestBy)}</p>`).join(''):'<p class="empty">Nothing due within 7 days.</p>'}</div>`;
+}
+function crud(name){
+  const c=M[name],rows=S[c.key];
+  const stockHtml=name==='supplies'?`<div class="panel"><h3 style="margin-top:0">Stock on hand</h3>${stock().map(s=>`<span class="tag ${s.left<=0?'bad':'ok'}" style="margin:0 .4rem .4rem 0">${esc(s.item)}: ${s.left} ${esc(s.unit)}</span>`).join('')||'<p class="empty">No supplies recorded.</p>'}</div>`:'';
+  const sorted=[...rows].sort((a,b)=>String(b.date||b.due||b.planted).localeCompare(String(a.date||a.due||a.planted)));
+  return `<h2>${c.label}</h2>${stockHtml}<div class="tools"><span style="color:var(--mut)">${rows.length} record(s)</span>${canEdit()?`<button class="btn" data-new="${name}">+ Add</button>`:''}</div>
+  <div class="panel tw">${rows.length?`<table><thead><tr>${c.heads.map(h=>`<th>${h}</th>`).join('')}${canEdit()?'<th></th>':''}</tr></thead><tbody>${sorted.map(r=>`<tr>${c.row(r).map(v=>`<td>${typeof v==='string'&&/<span|&amp;|&#/.test(v)||typeof v==='number'?v:esc(v)}</td>`).join('')}${canEdit()?`<td style="white-space:nowrap">${c.extra?c.extra(r):''} <button class="btn sm alt" data-edit="${name}:${r.id}">Edit</button> <button class="btn sm del" data-del="${name}:${r.id}">Delete</button></td>`:''}</tr>`).join('')}</tbody></table>`:`<p class="empty">No records yet.${canEdit()?' Use “Add” to create the first one.':''}</p>`}</div>`;
+}
+function reports(){
+  const from=$('#from')?.value||'',to=$('#to')?.value||'';
+  return `<h2>Productivity report</h2><div class="tools noprint"><div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:end"><div><label for="from">From</label><input type="date" id="from" value="${from}"></div><div><label for="to">To</label><input type="date" id="to" value="${to}"></div></div><button class="btn" onclick="window.print()">Print / Save as PDF</button></div><div id="rep"></div>`;
+}
+function fillReport(){
+  const from=$('#from').value,to=$('#to').value;
+  const H=S.harvests.filter(h=>(!from||h.date>=from)&&(!to||h.date<=to));
+  const by={};H.forEach(h=>{const c=(S.batches.find(b=>b.id===h.batchId)||{}).crop||'Other';const o=by[c]=by[c]||{kg:0,dist:0,n:0};o.kg+=num(h.qty);o.n++;if(h.status==='Distributed')o.dist+=num(h.qty)});
+  const tot=H.reduce((a,h)=>a+num(h.qty),0),dist=H.filter(h=>h.status==='Distributed').reduce((a,h)=>a+num(h.qty),0);
+  const used=S.supplies.filter(s=>s.kind==='Used'&&(!from||s.date>=from)&&(!to||s.date<=to));
+  $('#rep').innerHTML=`<div class="panel"><p class="print-only"><b>Eco Garden of Barangay Ulango</b> – Garden Manager: Ms. Maricel Evangelista</p><p>Period: <b>${from||'start'}</b> to <b>${to||'present'}</b> · Generated ${today()}</p>
+  <div class="grid"><div class="stat"><b>${tot} kg</b><span>Total harvest</span></div><div class="stat"><b>${dist} kg</b><span>Distributed</span></div><div class="stat"><b>${S.batches.filter(b=>b.stage!=='Harvested').length}</b><span>Active batches</span></div><div class="stat"><b>${S.issues.length}</b><span>Pest / health issues logged</span></div></div>
+  <h3>Harvest by crop</h3>${Object.keys(by).length?`<div class="tw"><table><thead><tr><th>Crop</th><th>Harvests</th><th>Total (kg)</th><th>Distributed (kg)</th></tr></thead><tbody>${Object.entries(by).map(([c,o])=>`<tr><td>${esc(c)}</td><td>${o.n}</td><td>${o.kg}</td><td>${o.dist}</td></tr>`).join('')}</tbody></table></div>`:'<p class="empty">No harvests in this period.</p>'}
+  <h3>Supplies used</h3>${used.length?`<div class="tw"><table><tbody>${used.map(s=>`<tr><td>${s.date}</td><td>${esc(s.item)}</td><td>${s.qty} ${esc(s.unit)}</td><td>${esc(bname(s.batchId))}</td></tr>`).join('')}</tbody></table></div>`:'<p class="empty">No supplies used in this period.</p>'}</div>`;
+}
+
+/* ---------- shell ---------- */
+const NAV=[['dashboard','Dashboard'],['batches','Crop batches'],['tasks','Tasks'],['issues','Plant health'],['supplies','Supplies'],['harvests','Harvests'],['reports','Reports']];
+function render(){
+  $('#nav').innerHTML=NAV.map(([k,l])=>`<button data-p="${k}" class="${k===page?'on':''}">${l}</button>`).join('');
+  $('#view').innerHTML=page==='dashboard'?dashboard():page==='reports'?reports():crud(page);
+  if(page==='reports')fillReport();
+}
+function showApp(){
+  $('#login').classList.add('hide');$('#app').classList.remove('hide');
+  $('#who').textContent=role==='manager'?'Garden Manager':'Barangay Official (view only)';render();
+}
+function showLogin(){$('#app').classList.add('hide');$('#login').classList.remove('hide');$('#pin').value='';$('#err').textContent=''}
+$('#go').onclick=()=>{const r=$('#role').value;if($('#pin').value===PINS[r]){role=r;try{sessionStorage.setItem('role',r)}catch(e){}showApp()}else $('#err').textContent='Wrong PIN. Try again.'};
+$('#pin').onkeydown=e=>{if(e.key==='Enter')$('#go').click()};
+$('#out').onclick=()=>{try{sessionStorage.removeItem('role')}catch(e){}role=null;showLogin()};
+
+/* ---------- form dialog ---------- */
+function openForm(name,id){
+  const c=M[name],rec=id?S[c.key].find(r=>r.id===id):{};
+  $('#frm').innerHTML=`<h3 style="margin-top:0">${id?'Edit':'Add'} – ${c.label}</h3>`+c.fields.map(([k,l,t,o])=>{
+    const v=rec[k]??(t==='date'?today():'');
+    const opts=typeof o==='function'?o():o;
+    if(t==='select')return`<label for="f_${k}">${l}</label><select id="f_${k}" name="${k}">${opts.map(([val,lab])=>`<option value="${esc(val)}" ${val===v?'selected':''}>${esc(lab)}</option>`).join('')}</select>`;
+    if(t==='textarea')return`<label for="f_${k}">${l}</label><textarea id="f_${k}" name="${k}" rows="2">${esc(v)}</textarea>`;
+    const req=['crop','bed','item','issue'].includes(k)||t==='date'?'required':'';
+    return`<label for="f_${k}">${l}</label><input id="f_${k}" name="${k}" type="${t}" value="${esc(v)}" ${t==='number'?'min="0" step="any"':''} ${req}>`}).join('')+
+   `<div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem"><button type="button" class="btn alt" id="cx">Cancel</button><button class="btn" value="ok">Save</button></div>`;
+  $('#cx').onclick=()=>$('#dlg').close();
+  $('#frm').onsubmit=e=>{
+    const f=Object.fromEntries(new FormData($('#frm')));
+    c.fields.forEach(([k,,t])=>{if(t==='number')f[k]=num(f[k])});
+    if(id)Object.assign(rec,f);else S[c.key].push({id:uid(),done:false,...f});
+    save();render();
+  };
+  $('#dlg').showModal();
+}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.p){page=t.dataset.p;render()}
+  else if(t.dataset.new)openForm(t.dataset.new);
+  else if(t.dataset.edit){const[n,i]=t.dataset.edit.split(':');openForm(n,i)}
+  else if(t.dataset.del){const[n,i]=t.dataset.del.split(':');if(confirm('Delete this record? This cannot be undone.')){S[M[n].key]=S[M[n].key].filter(r=>r.id!==i);save();render()}}
+  else if(t.dataset.done){const r=S.tasks.find(x=>x.id===t.dataset.done);r.done=!r.done;save();render()}
+});
+document.addEventListener('change',e=>{if(e.target.id==='from'||e.target.id==='to')fillReport()});
+
+role&&PINS[role]?showApp():showLogin();
+</script>
+</body>
+</html>
